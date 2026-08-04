@@ -4,8 +4,8 @@
 **Curso** Ingenieria de Software II
 
 ## Indice de Practas
-- [ ] Práctica 1 · Tu repo del curso
-- [ ] Práctica 2 · Tu primer flujo profesional completo
+- [ ] Práctica 1 · Mi repo del curso
+- [ ] Práctica 2 · 
 - [ ] Práctica 3
 - [ ] Práctica 4
 - [ ] Práctica 5
