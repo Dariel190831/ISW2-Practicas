@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏥 Sistema de Citas Médicas
 
 Una aplicación web completa para gestionar citas médicas, pacientes y médicos de forma eficiente.
@@ -207,3 +208,20 @@ Este proyecto es de código abierto y puede ser usado libremente.
 ---
 
 **¡Esperamos que disfrutes usando el Sistema de Citas Médicas!** 🏥✨
+=======
+# ISW2-Practicas
+**Nombre** Eveneser Dariel Mencia Amador
+**Correo** darielmencia750@unitec.edu
+**Curso** Ingenieria de Software II
+
+## Indice de Practas
+- [ ] Práctica 1 · Mi repo del curso
+- [ ] Práctica 2 · 
+- [ ] Práctica 3
+- [ ] Práctica 4
+- [ ] Práctica 5
+- [ ] Práctica 6
+- [ ] Práctica 7
+- [ ] Práctica 8
+- [ ] Práctica 9
+>>>>>>> 7921b94898aaee59e3ab1294d32d596876a143b8
