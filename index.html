@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Citas Médicas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="loginModal" class="modal active">
+        <div class="modal-content login-form">
+            <h1>Sistema de Citas Médicas</h1>
+            <div class="role-selection">
+                <label class="radio-label">
+                    <input type="radio" name="role" value="paciente" checked> Paciente
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="role" value="medico"> Médico
+                </label>
+            </div>
+            <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+            <input type="password" id="loginPassword" placeholder="Contraseña" required>
+            <button onclick="login()" class="btn btn-primary">Iniciar Sesión</button>
+            <p>¿No tienes cuenta? <a href="#" onclick="showRegister()">Registrarse</a></p>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content register-form">
+            <h2>Crear Cuenta</h2>
+            <div class="role-selection">
+                <label class="radio-label">
+                    <input type="radio" name="regRole" value="paciente" checked> Paciente
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="regRole" value="medico"> Médico
+                </label>
+            </div>
+            <input type="text" id="regName" placeholder="Nombre completo" required>
+            <input type="email" id="regEmail" placeholder="Correo electrónico" required>
+            <input type="password" id="regPassword" placeholder="Contraseña" required>
+            <input type="tel" id="regPhone" placeholder="Teléfono" required>
+            <div id="doctorFields" style="display:none;">
+                <input type="text" id="regSpecialty" placeholder="Especialidad">
+                <input type="text" id="regLicense" placeholder="Número de Licencia">
+            </div>
+            <button onclick="register()" class="btn btn-primary">Registrarse</button>
+            <button onclick="showLogin()" class="btn btn-secondary">Volver al Login</button>
+        </div>
+    </div>
+
+    <div id="app" class="app-container" style="display:none;">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <h2>🏥 Citas Médicas</h2>
+            </div>
+            <div class="navbar-menu">
+                <button class="nav-btn" onclick="showSection('dashboard')">Dashboard</button>
+                <button class="nav-btn" onclick="showSection('appointments')">Citas</button>
+                <button class="nav-btn" onclick="showSection('patients')" id="patientsNavBtn" style="display:none;">Pacientes</button>
+                <button class="nav-btn" onclick="showSection('doctors')" id="doctorsNavBtn" style="display:none;">Médicos</button>
+                <button class="nav-btn" onclick="showSection('history')">Historial</button>
+                <button class="nav-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+            <div class="user-info">
+                <span id="userDisplay"></span>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <section id="dashboard" class="section active">
+                <h2>Dashboard</h2>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>Próximas Citas</h3>
+                        <p id="upcomingCount" class="big-number">0</p>
+                        <button onclick="showSection('appointments')" class="btn btn-small">Ver Citas</button>
+                    </div>
+                    <div class="card">
+                        <h3>Citas Completadas</h3>
+                        <p id="completedCount" class="big-number">0</p>
+                        <button onclick="showSection('history')" class="btn btn-small">Ver Historial</button>
+                    </div>
+                    <div class="card" id="patientsCard" style="display:none;">
+                        <h3>Pacientes</h3>
+                        <p id="patientsCount" class="big-number">0</p>
+                        <button onclick="showSection('patients')" class="btn btn-small">Gestionar</button>
+                    </div>
+                    <div class="card" id="doctorsCard" style="display:none;">
+                        <h3>Médicos</h3>
+                        <p id="doctorsCount" class="big-number">0</p>
+                        <button onclick="showSection('doctors')" class="btn btn-small">Gestionar</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="appointments" class="section">
+                <h2>Gestión de Citas</h2>
+                <div class="section-controls">
+                    <button class="btn btn-primary" onclick="showSection('newAppointment')">+ Nueva Cita</button>
+                </div>
+                <div class="appointment-filters">
+                    <button class="filter-btn active" onclick="filterAppointments('all')">Todas</button>
+                    <button class="filter-btn" onclick="filterAppointments('upcoming')">Próximas</button>
+                    <button class="filter-btn" onclick="filterAppointments('past')">Pasadas</button>
+                </div>
+                <div id="appointmentsList" class="appointments-list"></div>
+            </section>
+
+            <section id="newAppointment" class="section">
+                <h2>Agendar Nueva Cita</h2>
+                <form class="form-grid">
+                    <div>
+                        <label>Fecha</label>
+                        <input type="date" id="appointmentDate" required>
+                    </div>
+                    <div>
+                        <label>Hora</label>
+                        <input type="time" id="appointmentTime" required>
+                    </div>
+                    <div>
+                        <label>Médico</label>
+                        <select id="appointmentDoctor" required>
+                            <option value="">Seleccionar médico...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Motivo de la Consulta</label>
+                        <textarea id="appointmentReason" placeholder="Describe tu síntoma o motivo..." required></textarea>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="button" class="btn btn-primary" onclick="saveAppointment()">Guardar Cita</button>
+                        <button type="button" class="btn btn-secondary" onclick="showSection('appointments')">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="patients" class="section" style="display:none;">
+                <h2>Gestión de Pacientes</h2>
+                <input type="text" id="patientSearch" placeholder="Buscar paciente..." class="search-box" onkeyup="searchPatients()">
+                <div id="patientsList" class="table-responsive"></div>
+            </section>
+
+            <section id="doctors" class="section" style="display:none;">
+                <h2>Gestión de Médicos</h2>
+                <div class="section-controls">
+                    <button class="btn btn-primary" onclick="showSection('newDoctor')">+ Agregar Médico</button>
+                </div>
+                <div id="doctorsList" class="table-responsive"></div>
+            </section>
+
+            <section id="newDoctor" class="section" style="display:none;">
+                <h2>Agregar Nuevo Médico</h2>
+                <form class="form-grid">
+                    <div>
+                        <label>Nombre Completo</label>
+                        <input type="text" id="doctorName" required>
+                    </div>
+                    <div>
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="doctorEmail" required>
+                    </div>
+                    <div>
+                        <label>Teléfono</label>
+                        <input type="tel" id="doctorPhone" required>
+                    </div>
+                    <div>
+                        <label>Especialidad</label>
+                        <input type="text" id="doctorSpecialty" required>
+                    </div>
+                    <div>
+                        <label>Número de Licencia</label>
+                        <input type="text" id="doctorLicense" required>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="button" class="btn btn-primary" onclick="saveDoctor()">Guardar Médico</button>
+                        <button type="button" class="btn btn-secondary" onclick="showSection('doctors')">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="history" class="section">
+                <h2>Historial Médico</h2>
+                <div id="historyList" class="history-list"></div>
+            </section>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
