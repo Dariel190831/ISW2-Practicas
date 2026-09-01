@@ -6,10 +6,13 @@
 
 const TASA_IMPUESTO = 0.15;
 const UMBRAL_DESCUENTO_ALTO = 500;
-const DESCUENTO_MAYORISTA_ALTO = 0.15;
-const DESCUENTO_MAYORISTA_BAJO = 0.05;
-const DESCUENTO_FRECUENTE_ALTO = 0.1;
-const DESCUENTO_FRECUENTE_BAJO = 0.03;
+
+// Tabla de descuentos por tipo de cliente: agregar un tipo nuevo (ej. "vip")
+// es agregar una fila acá, no tocar la lógica de obtenerPorcentajeDescuento.
+const DESCUENTOS_POR_TIPO_CLIENTE = {
+  mayorista: { alto: 0.15, bajo: 0.05 },
+  frecuente: { alto: 0.1, bajo: 0.03 },
+};
 
 let inventario = {
   arroz: { precio: 25, stock: 100 },
@@ -31,44 +34,62 @@ function calcularSubtotalDeItem(item, inventarioActual) {
   return { ok: true, subtotal: producto.precio * item.cantidad };
 }
 
-function procesarPedido(items, cliente, tipoCliente) {
+function aplicarItemsAlPedido(items, inventarioActual) {
   let total = 0;
   let detalle = "";
   for (const item of items) {
-    const calculo = calcularSubtotalDeItem(item, inventario);
+    const calculo = calcularSubtotalDeItem(item, inventarioActual);
     if (!calculo.ok) {
       console.log(calculo.motivo);
       continue;
     }
     total = total + calculo.subtotal;
     detalle = detalle + item.nombre + " x" + item.cantidad + " = " + calculo.subtotal + "\n";
-    inventario[item.nombre].stock = inventario[item.nombre].stock - item.cantidad;
+    inventarioActual[item.nombre].stock = inventarioActual[item.nombre].stock - item.cantidad;
   }
+  return { total, detalle };
+}
 
-  if (tipoCliente === "mayorista") {
-    if (total > UMBRAL_DESCUENTO_ALTO) {
-      total = total - total * DESCUENTO_MAYORISTA_ALTO;
-    } else {
-      total = total - total * DESCUENTO_MAYORISTA_BAJO;
-    }
-  } else if (tipoCliente === "frecuente") {
-    if (total > UMBRAL_DESCUENTO_ALTO) {
-      total = total - total * DESCUENTO_FRECUENTE_ALTO;
-    } else {
-      total = total - total * DESCUENTO_FRECUENTE_BAJO;
-    }
-  }
+function obtenerPorcentajeDescuento(tipoCliente, subtotal) {
+  const descuentos = DESCUENTOS_POR_TIPO_CLIENTE[tipoCliente];
+  if (!descuentos) return 0;
+  return subtotal > UMBRAL_DESCUENTO_ALTO ? descuentos.alto : descuentos.bajo;
+}
 
-  total = total + total * TASA_IMPUESTO;
+function calcularTotalConDescuentoEImpuesto(subtotal, tipoCliente) {
+  const porcentajeDescuento = obtenerPorcentajeDescuento(tipoCliente, subtotal);
+  const totalConDescuento = subtotal - subtotal * porcentajeDescuento;
+  return totalConDescuento + totalConDescuento * TASA_IMPUESTO;
+}
+
+function formatearRecibo(detalle, total, cliente) {
+  return (
+    "=== RECIBO ===\n" +
+    detalle +
+    "\n" +
+    "TOTAL: " + total.toFixed(2) + "\n" +
+    "Cliente: " + cliente
+  );
+}
+
+function procesarPedido(items, cliente, tipoCliente) {
+  const { total: subtotal, detalle } = aplicarItemsAlPedido(items, inventario);
+  const total = calcularTotalConDescuentoEImpuesto(subtotal, tipoCliente);
 
   historialVentas.push({ cliente: cliente, total: total, fecha: new Date() });
 
-  console.log("=== RECIBO ===");
-  console.log(detalle);
-  console.log("TOTAL: " + total.toFixed(2));
-  console.log("Cliente: " + cliente);
+  console.log(formatearRecibo(detalle, total, cliente));
 
   return total;
 }
 
-module.exports = { procesarPedido, inventario, historialVentas };
+module.exports = {
+  procesarPedido,
+  aplicarItemsAlPedido,
+  calcularSubtotalDeItem,
+  obtenerPorcentajeDescuento,
+  calcularTotalConDescuentoEImpuesto,
+  formatearRecibo,
+  inventario,
+  historialVentas,
+};
