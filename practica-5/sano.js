@@ -4,6 +4,13 @@
 // los pasos de refactor descritos en el historial de commits y en
 // practica-5/diagnostico.md.
 
+const TASA_IMPUESTO = 0.15;
+const UMBRAL_DESCUENTO_ALTO = 500;
+const DESCUENTO_MAYORISTA_ALTO = 0.15;
+const DESCUENTO_MAYORISTA_BAJO = 0.05;
+const DESCUENTO_FRECUENTE_ALTO = 0.1;
+const DESCUENTO_FRECUENTE_BAJO = 0.03;
+
 let inventario = {
   arroz: { precio: 25, stock: 100 },
   frijoles: { precio: 30, stock: 80 },
@@ -32,20 +39,20 @@ function procesarPedido(items, cliente, tipoCliente) {
   }
 
   if (tipoCliente === "mayorista") {
-    if (total > 500) {
-      total = total - total * 0.15;
+    if (total > UMBRAL_DESCUENTO_ALTO) {
+      total = total - total * DESCUENTO_MAYORISTA_ALTO;
     } else {
-      total = total - total * 0.05;
+      total = total - total * DESCUENTO_MAYORISTA_BAJO;
     }
   } else if (tipoCliente === "frecuente") {
-    if (total > 500) {
-      total = total - total * 0.1;
+    if (total > UMBRAL_DESCUENTO_ALTO) {
+      total = total - total * DESCUENTO_FRECUENTE_ALTO;
     } else {
-      total = total - total * 0.03;
+      total = total - total * DESCUENTO_FRECUENTE_BAJO;
     }
   }
 
-  total = total + total * 0.15;
+  total = total + total * TASA_IMPUESTO;
 
   historialVentas.push({ cliente: cliente, total: total, fecha: new Date() });
 
