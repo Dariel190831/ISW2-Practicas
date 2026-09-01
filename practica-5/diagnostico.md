@@ -59,6 +59,55 @@ function procesarPedido(items, cliente, tipoCliente) {
 | 5 | El bloque `if/else` de descuento para `"mayorista"` y `"frecuente"` repite la misma estructura (umbral > 500 → tasa alta, si no → tasa baja); agregar un tercer tipo de cliente obliga a copiar el bloque de nuevo y editar la función. | M1 #5 — Repetición de código · SOLID 2 — Open/Closed Principle | Se reemplazó el `if/else` duplicado por la tabla de datos `DESCUENTOS_POR_TIPO_CLIENTE` y la función `obtenerPorcentajeDescuento`. Agregar un tipo de cliente nuevo (ej. `"vip"`) ahora es agregar una fila a la tabla, sin tocar la lógica ya escrita ni volver a probarla. |
 | 6 | Los casos de error ("producto no existe", "sin stock") solo se comunican imprimiendo por consola y `continue`; quien llama a `procesarPedido` no tiene forma programática de saber qué falló. Además la función depende directamente de las variables globales `inventario` y `historialVentas`, y de `console.log` como implementación fija. | M1 #6 — Falta de manejo de errores · SOLID 5 — Dependency Inversion Principle | `calcularSubtotalDeItem` devuelve `{ ok, motivo }` de forma explícita en vez de solo loguear; `aplicarItemsAlPedido` acumula esos motivos en `errores` y se los devuelve a quien la llama. `procesarPedido(items, cliente, tipoCliente, inventarioActual = inventario, historial = historialVentas, logger = console.log)` recibe sus dependencias como parámetros con esos mismos valores por defecto, así el comportamiento no cambia para quien ya la usaba, pero ahora se puede inyectar un inventario de prueba o un logger que junte los mensajes en un arreglo en vez de imprimir. |
 
+## Diagrama de la estructura final (sano.js)
+
+Cómo quedó `procesarPedido` como orquestador de funciones pequeñas y puras,
+con sus tres dependencias inyectables (inversión de dependencias, problema
+#6 de la tabla de arriba):
+
+```mermaid
+flowchart TD
+    caller(["Quien llama a procesarPedido<br/>(código de la app o los tests)"])
+
+    caller -->|"items, cliente, tipoCliente,<br/>[inventarioActual], [historial], [logger]"| procesarPedido
+
+    subgraph sanojs["sano.js"]
+        procesarPedido["procesarPedido()<br/>orquestador"]
+        aplicarItems["aplicarItemsAlPedido()"]
+        calcularSubtotal["calcularSubtotalDeItem()"]
+        calcularTotal["calcularTotalConDescuentoEImpuesto()"]
+        obtenerDescuento["obtenerPorcentajeDescuento()"]
+        formatear["formatearRecibo()"]
+    end
+
+    inventario[("inventarioActual<br/>default: inventario")]
+    historial[("historial<br/>default: historialVentas")]
+    logger(["logger<br/>default: console.log"])
+
+    procesarPedido --> aplicarItems
+    aplicarItems --> calcularSubtotal
+    aplicarItems -.->|"lee/actualiza stock"| inventario
+    procesarPedido --> calcularTotal
+    calcularTotal --> obtenerDescuento
+    procesarPedido -.->|"push de la venta"| historial
+    procesarPedido --> formatear
+    procesarPedido -.->|"errores + recibo"| logger
+
+    classDef orquestador fill:#1168bd,color:#fff,stroke:#0b4884
+    classDef puro fill:#438dd5,color:#fff,stroke:#2e6295
+    classDef dep fill:#999999,color:#fff,stroke:#6b6b6b
+    class procesarPedido orquestador
+    class aplicarItems,calcularSubtotal,calcularTotal,obtenerDescuento,formatear puro
+    class inventario,historial,logger dep
+```
+
+Cada caja azul clara es una función pura con una sola responsabilidad
+(SRP). Las tres cajas grises no son módulos concretos fijos: son
+parámetros con valor por defecto, así que quien llama a `procesarPedido`
+puede inyectar su propio inventario, historial o logger de prueba sin
+tocar el código de `sano.js` (DIP).
+
+
 ## Qué se mantuvo igual a propósito
 
 La firma pública `procesarPedido(items, cliente, tipoCliente)` sigue funcionando
