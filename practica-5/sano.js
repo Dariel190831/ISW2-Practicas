@@ -14,13 +14,19 @@ const DESCUENTOS_POR_TIPO_CLIENTE = {
   frecuente: { alto: 0.1, bajo: 0.03 },
 };
 
-let inventario = {
-  arroz: { precio: 25, stock: 100 },
-  frijoles: { precio: 30, stock: 80 },
-  aceite: { precio: 45, stock: 50 },
-  jabon: { precio: 15, stock: 200 },
-};
+// Fábrica del inventario inicial: antes era un objeto global fijo del que
+// procesarPedido dependía directamente. Ahora es un valor cualquiera que se
+// puede crear, inyectar o mockear (Inversión de Dependencias).
+function crearInventarioInicial() {
+  return {
+    arroz: { precio: 25, stock: 100 },
+    frijoles: { precio: 30, stock: 80 },
+    aceite: { precio: 45, stock: 50 },
+    jabon: { precio: 15, stock: 200 },
+  };
+}
 
+let inventario = crearInventarioInicial();
 let historialVentas = [];
 
 function calcularSubtotalDeItem(item, inventarioActual) {
@@ -37,17 +43,18 @@ function calcularSubtotalDeItem(item, inventarioActual) {
 function aplicarItemsAlPedido(items, inventarioActual) {
   let total = 0;
   let detalle = "";
+  const errores = [];
   for (const item of items) {
     const calculo = calcularSubtotalDeItem(item, inventarioActual);
     if (!calculo.ok) {
-      console.log(calculo.motivo);
+      errores.push(calculo.motivo);
       continue;
     }
     total = total + calculo.subtotal;
     detalle = detalle + item.nombre + " x" + item.cantidad + " = " + calculo.subtotal + "\n";
     inventarioActual[item.nombre].stock = inventarioActual[item.nombre].stock - item.cantidad;
   }
-  return { total, detalle };
+  return { total, detalle, errores };
 }
 
 function obtenerPorcentajeDescuento(tipoCliente, subtotal) {
@@ -72,13 +79,28 @@ function formatearRecibo(detalle, total, cliente) {
   );
 }
 
-function procesarPedido(items, cliente, tipoCliente) {
-  const { total: subtotal, detalle } = aplicarItemsAlPedido(items, inventario);
+// inventarioActual, historial y logger son inyectables: por defecto usan el
+// estado del módulo y console.log (mismo comportamiento que antes), pero
+// cualquier llamador puede pasar sus propias dependencias (por ejemplo un
+// inventario de prueba o un logger que junte mensajes en un arreglo) sin
+// tocar esta función. Así procesarPedido deja de depender de una
+// implementación concreta y pasa a depender de una interfaz simple.
+function procesarPedido(
+  items,
+  cliente,
+  tipoCliente,
+  inventarioActual = inventario,
+  historial = historialVentas,
+  logger = console.log
+) {
+  const { total: subtotal, detalle, errores } = aplicarItemsAlPedido(items, inventarioActual);
+  errores.forEach((motivo) => logger(motivo));
+
   const total = calcularTotalConDescuentoEImpuesto(subtotal, tipoCliente);
 
-  historialVentas.push({ cliente: cliente, total: total, fecha: new Date() });
+  historial.push({ cliente: cliente, total: total, fecha: new Date() });
 
-  console.log(formatearRecibo(detalle, total, cliente));
+  logger(formatearRecibo(detalle, total, cliente));
 
   return total;
 }
@@ -90,6 +112,7 @@ module.exports = {
   obtenerPorcentajeDescuento,
   calcularTotalConDescuentoEImpuesto,
   formatearRecibo,
+  crearInventarioInicial,
   inventario,
   historialVentas,
 };
