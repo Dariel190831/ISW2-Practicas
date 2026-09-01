@@ -20,21 +20,28 @@ let inventario = {
 
 let historialVentas = [];
 
+function calcularSubtotalDeItem(item, inventarioActual) {
+  const producto = inventarioActual[item.nombre];
+  if (!producto) {
+    return { ok: false, motivo: "Producto no existe: " + item.nombre };
+  }
+  if (producto.stock < item.cantidad) {
+    return { ok: false, motivo: "Sin stock suficiente para " + item.nombre };
+  }
+  return { ok: true, subtotal: producto.precio * item.cantidad };
+}
+
 function procesarPedido(items, cliente, tipoCliente) {
   let total = 0;
   let detalle = "";
   for (const item of items) {
-    if (!inventario[item.nombre]) {
-      console.log("Producto no existe: " + item.nombre);
+    const calculo = calcularSubtotalDeItem(item, inventario);
+    if (!calculo.ok) {
+      console.log(calculo.motivo);
       continue;
     }
-    if (inventario[item.nombre].stock < item.cantidad) {
-      console.log("Sin stock suficiente para " + item.nombre);
-      continue;
-    }
-    let subtotal = inventario[item.nombre].precio * item.cantidad;
-    total = total + subtotal;
-    detalle = detalle + item.nombre + " x" + item.cantidad + " = " + subtotal + "\n";
+    total = total + calculo.subtotal;
+    detalle = detalle + item.nombre + " x" + item.cantidad + " = " + calculo.subtotal + "\n";
     inventario[item.nombre].stock = inventario[item.nombre].stock - item.cantidad;
   }
 
