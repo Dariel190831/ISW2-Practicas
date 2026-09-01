@@ -16,20 +16,19 @@ let historialVentas = [];
 function procesarPedido(items, cliente, tipoCliente) {
   let total = 0;
   let detalle = "";
-  for (let i = 0; i < items.length; i++) {
-    let p = items[i];
-    if (!inventario[p.nombre]) {
-      console.log("Producto no existe: " + p.nombre);
+  for (const item of items) {
+    if (!inventario[item.nombre]) {
+      console.log("Producto no existe: " + item.nombre);
       continue;
     }
-    if (inventario[p.nombre].stock < p.cantidad) {
-      console.log("Sin stock suficiente para " + p.nombre);
+    if (inventario[item.nombre].stock < item.cantidad) {
+      console.log("Sin stock suficiente para " + item.nombre);
       continue;
     }
-    let subtotal = inventario[p.nombre].precio * p.cantidad;
+    let subtotal = inventario[item.nombre].precio * item.cantidad;
     total = total + subtotal;
-    detalle = detalle + p.nombre + " x" + p.cantidad + " = " + subtotal + "\n";
-    inventario[p.nombre].stock = inventario[p.nombre].stock - p.cantidad;
+    detalle = detalle + item.nombre + " x" + item.cantidad + " = " + subtotal + "\n";
+    inventario[item.nombre].stock = inventario[item.nombre].stock - item.cantidad;
   }
 
   if (tipoCliente === "mayorista") {
