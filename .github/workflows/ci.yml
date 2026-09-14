@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run test suites
+        run: |
+          set -e
+          for f in practica-4/*.test.js practica-5/*.test.js; do
+            echo "=== Running $f ==="
+            OUTPUT=$(node "$f")
+            echo "$OUTPUT"
+            if echo "$OUTPUT" | grep -q "❌"; then
+              echo "FAILED: $f tiene al menos un test en rojo"
+              exit 1
+            fi
+          done
